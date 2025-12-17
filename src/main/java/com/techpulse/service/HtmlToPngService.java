@@ -1,12 +1,15 @@
 package com.techpulse.service;
 
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Entities;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
-
 import javax.imageio.ImageIO;
+
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.nio.file.Files;
@@ -35,20 +38,32 @@ public class HtmlToPngService {
         }
     }
 
-    public File convertHtmlToPngFile(String htmlContent, int width, int height, String fileName) throws IOException {
+    public File convertHtmlToPngFile(String htmlContent, int width, int height, String fileName)
+            throws IOException {
+
         if (width <= 0) width = defaultWidth;
         if (height <= 0) height = defaultHeight;
 
+        Document jsoupDoc = Jsoup.parse(htmlContent);
+        jsoupDoc.outputSettings()
+                .syntax(Document.OutputSettings.Syntax.xml)
+                .escapeMode(Entities.EscapeMode.xhtml)
+                .charset("UTF-8");
+
+        String xhtmlContent = jsoupDoc.html();
+
         ByteArrayOutputStream pdfOs = new ByteArrayOutputStream();
+
         PdfRendererBuilder builder = new PdfRendererBuilder();
         builder.useFastMode();
-        builder.withHtmlContent(htmlContent, null);
+        builder.withHtmlContent(xhtmlContent, null);
         builder.toStream(pdfOs);
         builder.run();
 
         PDDocument document = PDDocument.load(pdfOs.toByteArray());
-        PDFRenderer pdfRenderer = new PDFRenderer(document);
-        BufferedImage image = pdfRenderer.renderImageWithDPI(0, 150);
+        PDFRenderer renderer = new PDFRenderer(document);
+
+        BufferedImage image = renderer.renderImageWithDPI(0, 150);
         document.close();
 
         BufferedImage resized = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
@@ -56,6 +71,7 @@ public class HtmlToPngService {
 
         File outputFile = new File(outputDir + File.separator + fileName);
         ImageIO.write(resized, "png", outputFile);
+
         return outputFile;
     }
 }
