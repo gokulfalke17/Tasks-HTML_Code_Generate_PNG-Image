@@ -76,7 +76,7 @@
             <version>2.5.0</version>
         </dependency>
 
-        <dependency>
+        <!--<dependency>
             <groupId>org.apache.xmlgraphics</groupId>
             <artifactId>batik-transcoder</artifactId>
             <version>1.17</version>
@@ -91,7 +91,7 @@
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-web</artifactId>
             <version>21</version>
-        </dependency>
+        </dependency>-->
 
     </dependencies>
 

@@ -38,7 +38,8 @@ public class HtmlToPngController {
         }
     }
 
-    @GetMapping("/get-png/{fileName}")
+    //get only that png image and display in browser
+   /* @GetMapping("/get-png/{fileName}")
     public ResponseEntity<byte[]> getPng(@PathVariable String fileName) {
         try {
             File file = Path.of(outputDir, fileName).toFile();
@@ -54,6 +55,34 @@ public class HtmlToPngController {
             e.printStackTrace();
             return ResponseEntity.status(500).build();
         }
+    }*/
+
+    //get downloadable png image file from server
+    @GetMapping("/get-png/{fileName}")
+    public ResponseEntity<byte[]> getPng(@PathVariable String fileName) {
+        try {
+            File file = Path.of(outputDir, fileName).toFile();
+
+            if (!file.exists()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            byte[] data = Files.readAllBytes(file.toPath());
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.IMAGE_PNG);
+
+            headers.set(HttpHeaders.CONTENT_DISPOSITION,
+                    "attachment; filename=\"" + fileName + "\"");
+
+            headers.setContentLength(data.length);
+
+            return new ResponseEntity<>(data, headers, HttpStatus.OK);
+
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
+
 
 }
